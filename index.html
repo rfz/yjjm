@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件复制并下载</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f9;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            text-align: center;
+        }
+        .drop-area {
+            border: 2px dashed #ccc;
+            border-radius: 20px;
+            width: 300px;
+            height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: #555;
+            transition: border-color 0.3s ease;
+            margin-bottom: 20px;
+        }
+        .drop-area:hover {
+            border-color: #aaa;
+        }
+        .file-list {
+            list-style-type: none;
+            padding: 0;
+            width: 300px;
+            max-height: 150px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .file-list li {
+            background-color: #e9ecef;
+            margin-bottom: 5px;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .footer {
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #555;
+            font-size: 14px;
+        }
+        .lang-selector {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="title">文件复制并下载</h1>
+        <div class="drop-area" id="dropArea">
+            <p id="dropText">拖拽文件到这里或点击选择</p>
+            <input type="file" id="fileInput" multiple style="display: none;">
+        </div>
+        <ul class="file-list" id="fileList"></ul>
+        <div class="lang-selector">
+            <label>
+                <input type="radio" name="language" value="zh-CN" checked onchange="changeLanguage('zh-CN')"> 中文
+            </label>
+            <label>
+                <input type="radio" name="language" value="en-US" onchange="changeLanguage('en-US')"> English
+            </label>
+        </div>
+    </div>
+    <div class="footer">
+        © 2024 Eden
+    </div>
+
+    <script>
+        const dropArea = document.getElementById('dropArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const titleElement = document.getElementById('title');
+        const dropTextElement = document.getElementById('dropText');
+
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // Highlight drop area when item is dragged over it
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            dropArea.style.borderColor = '#aaa';
+        }
+
+        function unhighlight(e) {
+            dropArea.style.borderColor = '#ccc';
+        }
+
+        // Handle dropped files
+        dropArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        // Handle file input change
+        fileInput.addEventListener('change', () => {
+            handleFiles(fileInput.files);
+        });
+
+        // Open file dialog on drop area click
+        dropArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        function handleFiles(files = []) {
+            if (files.length === 0) return;
+
+            // Clear previous file list
+            fileList.innerHTML = '';
+
+            Array.from(files).forEach(file => {
+                const li = document.createElement('li');
+                li.textContent = file.name;
+                fileList.appendChild(li);
+                readFileAndDownload(file);
+            });
+        }
+
+        function readFileAndDownload(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                console.log('File read successfully:', file.name);
+                const blob = new Blob([e.target.result], { type: file.type });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `copy_of_${file.name}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            };
+            reader.onerror = () => {
+                console.error('Failed to read the file:', file.name);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function changeLanguage(lang) {
+            if (lang === 'zh-CN') {
+                titleElement.textContent = "文件复制并下载";
+                dropTextElement.textContent = "拖拽文件到这里或点击选择";
+            } else if (lang === 'en-US') {
+                titleElement.textContent = "File Copy and Download";
+                dropTextElement.textContent = "Drag & Drop files here or click to select";
+            }
+        }
+    </script>
+</body>
+</html>
+
+
+
