@@ -155,7 +155,7 @@
             const reader = new FileReader();
             reader.onload = (e) => {
                 console.log('File read successfully:', file.name);
-                const blob = new Blob([e.target.result], { type: file.type });
+                const blob = new Blob([new Uint8Array(e.target.result)], { type: file.type });
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -168,7 +168,7 @@
             reader.onerror = () => {
                 console.error('Failed to read the file:', file.name);
             };
-            reader.readAsDataURL(file);
+            reader.readAsArrayBuffer(file); // Use readAsArrayBuffer for binary data
         }
 
         function changeLanguage(lang) {
